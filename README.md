@@ -1,138 +1,145 @@
-🚀 Metal Part Lifespan Prediction using Machine Learning
-📌 Project Overview
+# 🚀 Turbine Component Lifespan Prediction using Ensemble Learning & NLP
 
-This project implements a complete end-to-end Machine Learning pipeline to predict the lifespan of manufactured metal parts using production parameters.
+## 📌 Project Overview
+This project presents a complete end-to-end **Machine Learning solution** for predicting and classifying turbine component lifespan using synthetic manufacturing data.
 
-The business objective is twofold:
+The objective was to:
+* **Predict continuous lifespan** (Regression)
+* **Classify components into quality tiers** (Binary & Multi-Class Classification)
+* **Compare models rigorously** and provide a deployment recommendation
 
-Regression Task – Predict the exact lifespan of a metal part.
+The project strictly follows a structured ML pipeline including data exploration, preprocessing, feature engineering, hyperparameter tuning, model evaluation, and interpretability.
 
-Classification Task – Determine whether a part is safe for deployment based on a lifespan threshold.
+---
 
-The project includes full experimentation, hyperparameter tuning, performance comparison, and a final deployment recommendation.
+## 🏭 Business Context
+In industrial manufacturing, destructive lifespan testing is expensive and time-consuming. This project demonstrates how Machine Learning can:
+* **Reduce** destructive testing costs
+* **Improve** predictive maintenance
+* **Identify** key manufacturing drivers
+* **Support** data-driven production optimization
 
-🏭 Business Context
+---
 
-In manufacturing environments, destructive lifespan testing is expensive and time-consuming.
+## 📊 Dataset Description
+* **Size:** 1,000 rows × 16 columns (Synthetic turbine manufacturing dataset)
+* **Target Variable:** `Lifespan` (continuous, hours)
 
-By using machine learning models trained on measurable production parameters, we can:
+| Category | Features |
+| :--- | :--- |
+| **Numerical** | coolingRate, quenchTime, forgeTime, HeatTreatTime, Nickel%, Iron%, Cobalt%, Chromium%, smallDefects, largeDefects, sliverDefects |
+| **Categorical** | partType, microstructure, seedLocation, castType |
 
-Estimate product longevity without destructive testing
+---
 
-Reduce manufacturing waste
+## 🔎 Data Exploration & Preprocessing
+* **✔ Outlier Handling:** Interquartile Range (IQR) capping to prevent tree overfitting while preserving all samples.
+* **✔ Encoding & Scaling:** One-Hot Encoding for categorical variables and `StandardScaler` for numeric features.
+* **✔ Data Splitting:** 80/20 Train-Test split (`random_state=42`) with stratified split for classification.
+* **✔ Class Imbalance Handling:** Binary class imbalance (29% ≥1500 hours) addressed using **SMOTE** (applied on training data only).
 
-Improve process optimization
+---
 
-Support data-driven production decisions
+## 🧠 Regression Modelling
 
-🧠 Machine Learning Implementation
-🔹 Regression Models
+### **Models Implemented**
+1.  Linear Regression (Baseline)
+2.  Random Forest Regressor
+3.  Gradient Boosting Regressor
+4.  **NLP + Numeric Hybrid Model** (TF-IDF + Gradient Boosting)
 
-Linear Regression
+### **Best Numeric Model**
+> **Tuned Gradient Boosting Regressor**
+> * **R²:** ≈ 0.984
+> * **RMSE:** ≈ 43.5
+> * **MAE:** ≈ 35.0
 
-[Your second model – e.g., Random Forest / Neural Network]
+### **NLP-Enhanced Regression**
+* **Method:** Concatenated categorical columns into a text feature $\rightarrow$ Applied TF-IDF vectorization (100 terms) $\rightarrow$ Combined with scaled numeric features using `ColumnTransformer`.
+* **Result:** **R² ≈ 0.990** | **RMSE ≈ 35.0** | **MAE ≈ 26.8**
+* **Insight:** This hybrid approach improved predictive power by capturing latent relationships between categorical combinations.
 
-Evaluated using:
+---
 
-Mean Absolute Error (MAE)
+## 🔍 Regression Interpretability
+Using **SHAP (SHapley Additive exPlanations)**, the key drivers identified were:
+1.  **coolingRate** (High rate increases lifespan)
+2.  **Nickel%** (High percentage increases lifespan)
+3.  **forgeTime / HeatTreatTime**
+4.  **largeDefects** (Higher defect counts significantly reduce lifespan)
 
-Root Mean Squared Error (RMSE)
+---
 
-R² Score
+## 🎯 Classification Modelling
 
-🔹 Classification Models
+### **🔹 Binary Classification (≥ 1500 Hours)**
+* **Label 1:** Lifespan ≥ 1500 | **Label 0:** Lifespan < 1500
+* **Best Model:** **Tuned AdaBoost + SMOTE**
+* **Metrics:** Accuracy ≈ 0.95 | Macro F1 ≈ 0.95 | ROC-AUC ≈ 0.97
 
-Logistic Regression
+### **🔹 Three-Class Classification**
+Two strategies were implemented:
+1.  **Quantile-Based (33/33/33 Split):** CatBoost Macro F1 ≈ 0.87
+2.  **KMeans-Based Grouping (k=3):** Unsupervised clustering on numeric data.
+    * **Best Performance:** **CatBoost + KMeans Labels**
+    * **Macro F1:** ≈ 0.985 | **ROC-AUC:** ≈ 1.00
 
-[Your second model – e.g., ANN / Decision Tree]
+---
 
-Evaluated using:
+## 📈 Model Comparison Summary
 
-Accuracy
+| Task | Best Model | Key Metric | Performance |
+| :--- | :--- | :--- | :--- |
+| **Regression (Numeric)** | Gradient Boosting | $R^2$ | 0.984 |
+| **Regression (Hybrid NLP)**| GB + TF-IDF | $R^2$ | 0.990 |
+| **Binary Classification** | AdaBoost + SMOTE | Macro F1 | 0.95 |
+| **Three-Class Classification**| CatBoost + KMeans | Macro F1 | 0.985 |
 
-Precision
+---
 
-Recall
+## ⚖️ Critical Evaluation
 
-F1-Score
+**Strengths:**
+* Rigorous hyperparameter tuning and SMOTE-based imbalance correction.
+* Innovative Hybrid NLP + Numeric modelling.
+* SHAP-based explainability for "Black Box" models.
 
-Confusion Matrix
+**Limitations:**
+* Synthetic dataset lacks real-world noise/stochasticity.
+* TF-IDF ignores word order semantics (could be improved with Embeddings).
+* KMeans boundaries may shift as new manufacturing data is collected.
 
-⚙️ Methodology
+---
 
-The project follows a structured ML workflow:
+## 🏁 Final Recommendations
+1.  **Deploy Gradient Boosting + NLP hybrid** for lifespan prediction ($R^2 \approx 0.990$).
+2.  **Use AdaBoost + SMOTE** for binary safety classification.
+3.  **Monitor primary production drivers:** `coolingRate`, `Nickel%`, `forgeTime`, `HeatTreatTime`, and `defect counts`.
 
-Data Loading
+---
 
-Exploratory Data Analysis
+## 🛠 Tech Stack
+* **Data:** Pandas, NumPy
+* **ML:** Scikit-learn, XGBoost, CatBoost
+* **Viz/Interpret:** Matplotlib, Seaborn, SHAP
+* **Imbalance:** imbalanced-learn (SMOTE)
 
-Feature Selection
+---
 
-Data Preprocessing (Scaling, Splitting)
-
-Model Training
-
-Hyperparameter Tuning
-
-Performance Evaluation
-
-Model Comparison
-
-Deployment Recommendation
-
-All experiments use consistent train-test splits to ensure fair model comparison.
-
-📊 Key Insights
-
-Non-linear models demonstrated improved predictive performance.
-
-Feature scaling significantly impacted neural network performance.
-
-Classification provides clearer operational decision support.
-
-Model evaluation was aligned with real-world business priorities.
-
-🗂 Repository Structure
-metal-part-lifespan-ml/
+## 📂 Repository Structure
+```text
+turbine-lifespan-ml/
 │
-├── notebook/        → Jupyter Notebook implementation
-├── report/          → Full technical report
-├── images/          → Visualizations used in analysis
-├── requirements.txt → Python dependencies
-└── README.md        → Project documentation
-
-🛠 Tech Stack
-
-Python
-
-Pandas
-
-NumPy
-
-Scikit-learn
-
-Matplotlib
-
-Seaborn
-
-(TensorFlow / Keras if used)
-
-📎 Reproducibility
-
-To run the notebook:
-
-pip install -r requirements.txt
-
-
-Then open the notebook in Jupyter or Google Colab and execute all cells.
-
-⚠️ Academic Integrity Notice
-
-This repository is shared for educational and reference purposes only.
-
-If you are working on a similar academic assignment, use this project to understand methodology and experimentation strategies — do not copy solutions directly.
-
-👤 Author
-
-Janak
-MSc Data Science Candidate | Data Analytics | Machine Learning
+├── notebook/
+│   ├── turbine_lifespan_model.ipynb
+│   └── turbine_lifespan_model.pdf
+│
+├── report/
+│   └── COMP1801_ML_Report.pdf
+│
+├── images/
+│   └── (plots, confusion matrices, SHAP visuals)
+│
+├── requirements.txt
+│
+└── README.md
